@@ -81,7 +81,7 @@ onAuthStateChanged(auth, async (user) => {
           await addDoc(collection(db, "activities"), {
             organizationStaffer: auth.currentUser.email || "-",
             eventTitle: e.title,
-            timestamp: new Date(),
+            timestamp: serverTimestamp(),
             type: "event_organized",
           });
           await updateDoc(userRef, { status: "Organizzato" });
@@ -93,7 +93,7 @@ onAuthStateChanged(auth, async (user) => {
           await addDoc(collection(db, "activities"), {
             approvalStaffer: auth.currentUser.email || "-",
             eventTitle: e.title,
-            timestamp: new Date(),
+            timestamp: serverTimestamp(),
             type: "event_approval",
           });
           div.querySelector(".status").textContent = "Approvato";
@@ -104,7 +104,7 @@ onAuthStateChanged(auth, async (user) => {
           await addDoc(collection(db, "activities"), {
             rejectionStaffer: auth.currentUser.email || "-",
             eventTitle: e.title,
-            timestamp: new Date(),
+            timestamp: serverTimestamp(),
             type: "event_rejection",
           });
           const userRef = doc(db, "events", docSnap.id);

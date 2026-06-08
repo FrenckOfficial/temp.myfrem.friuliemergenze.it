@@ -126,7 +126,7 @@ async function updateRole(userId, currentRole) {
     type: "user_role_change_whatsapp",
     userName: userId,
     newRole,
-    timestamp: new Date()
+    timestamp: serverTimestamp()
   });
   loadUsers();
 }
@@ -136,7 +136,7 @@ async function deleteUser(userId) {
     await addDoc(collection(db, "activities"), {
       type: "user_deletion_whatsapp",
       userName: userId,
-      timestamp: new Date()
+      timestamp: serverTimestamp()
     });
     await updateDoc(doc(db, "users_whatsapp", userId), { status: "espulso" });
     loadUsers();
@@ -160,7 +160,7 @@ async function deleteFromDatabase(userId) {
     await addDoc(collection(db, "activities"), {
       type: "user_permanent_deletion_whatsapp",
       userName: userId,
-      timestamp: new Date()
+      timestamp: serverTimestamp()
     });
     await deleteDoc(doc(db, "users_whatsapp", userId));
     loadUsers();

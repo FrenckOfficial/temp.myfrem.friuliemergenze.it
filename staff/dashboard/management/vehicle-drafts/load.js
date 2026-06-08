@@ -38,6 +38,7 @@ class VehicleDraftsManager {
     constructor() {
         this.currentDraftId = null;
         this.drafts = [];
+        this.isSaving = false;
         console.log('🔧 VehicleDraftsManager - Costruttore inizializzato');
         this.init();
     }
@@ -268,6 +269,13 @@ class VehicleDraftsManager {
 
     async saveDraft(event) {
         event.preventDefault();
+
+        if (this.isSaving) {
+            console.warn('Salvataggio già in corso.');
+            return;
+        }
+
+        this.isSaving = true;
         
         console.log('\n═════════════════════════════════════════════');
         console.log('💾 SAVE DRAFT - INIZIO SALVATAGGIO');
@@ -334,6 +342,8 @@ class VehicleDraftsManager {
             console.error('❌ Messaggio:', error.message);
             console.error('❌ Stack:', error.stack);
             this.showError(`Errore: ${error.message}`);
+        } finally {
+            this.isSaving = false;
         }
     }
 
