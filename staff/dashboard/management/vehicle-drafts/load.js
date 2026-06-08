@@ -17,8 +17,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const logoutBtn = document.getElementById('logoutBtn');
-const modalClose = document.getElementById('modal-close');
-const btnCancel = document.getElementById('btn-cancel');
+const modalClose = document.querySelector('modal-close');
+const btnCancel = document.querySelector('btn-cancel');
 
 modalClose.addEventListener('click', () => {
     closeDraftModal();
