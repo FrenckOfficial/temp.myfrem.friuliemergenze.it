@@ -16,7 +16,7 @@ admin.initializeApp({
 const db = admin.firestore();
 
 const octokit = new Octokit({
-  auth: process.env.GT_TOKEN,
+  auth: process.env.GITHUB_TOKEN,
 });
 
 const GITHUB_OWNER = "FrenckOfficial";
