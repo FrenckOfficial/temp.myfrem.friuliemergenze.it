@@ -121,7 +121,9 @@ class VehicleDraftsManager {
         }
 
         emptyState.style.display = 'none';
-        draftCount.textContent = this.drafts.length;
+        draftCount.textContent = this.drafts.filter(
+            d => d.status !== "published"
+        ).length;
 
         draftsList.innerHTML = this.drafts.map(draft => this.renderDraftRow(draft)).join('');
 
@@ -147,9 +149,25 @@ class VehicleDraftsManager {
     }
 
     renderDraftRow(draft) {
-        const statusClass = draft.status === 'pending' ? 'status-pending' : 'status-in-progress';
-        const statusText = draft.status === 'pending' ? '⏳ In attesa' : '⚙️ In corso';
+        let statusClass = 'status-pending'
         const createdAtFormatted = this.formatDate(draft.createdAt);
+        let statusText = '⏳ In attesa';
+
+        if (draft.status === "pending") {
+            statusClass;
+        } else if (draft.status === "in_progress") {
+            statusClass = 'status-in-progress';
+        } else if (draft.status === "published") {
+            statusClass = 'status-published';
+        }
+
+        if (draft.status === "pending") {
+            statusText;
+        } else if (draft.status === "in_progress") {
+            statusText = '📝 In lavorazione';
+        } else if (draft.status === "published") {
+            statusText = '✅ Pubblicata';
+        }
 
         return `
             <tr>
@@ -317,7 +335,7 @@ class VehicleDraftsManager {
             console.log('💾 → Esecuzione updateDoc...');
             
             await updateDoc(draftRef, {
-                status: 'in_progress',
+                status: 'published',
                 data: vehicleData,
                 updatedAt: Timestamp.now(),
                 updatedBy: currentUser || 'Staff User'
@@ -326,7 +344,7 @@ class VehicleDraftsManager {
             console.log('✅ updateDoc completato!');
 
             draft.data = vehicleData;
-            draft.status = 'in_progress';
+            draft.status = 'published';
             draft.updatedAt = new Date().toISOString();
 
             console.log('✅ Stato locale aggiornato');
