@@ -1,0 +1,277 @@
+import { firebaseConfig } from "../configFirebase.js";
+
+firebase.initializeApp(firebaseConfig);
+
+console.log("🔥 Firebase inizializzato");
+
+const db = firebase.firestore();
+
+console.log("📦 Firestore inizializzato");
+
+const statusBox = document.getElementById("statusBox");
+
+const token = new URLSearchParams(window.location.search).get("token");
+
+console.log("🔑 Token ricevuto:", token);
+
+async function verifyEmail() {
+  console.log("🚀 verifyEmail() avviata");
+
+  if (!token) {
+    console.warn("❌ Token mancante");
+    statusBox.innerText = "❌ Token mancante";
+    statusBox.style.color = "red";
+    return;
+  }
+
+  try {
+    console.log("📡 Lettura token da Firestore...");
+
+    const tokenRef = db.collection("emailVerifications").doc(token);
+
+    console.log("📄 DocRef creato:", tokenRef.path);
+
+    const tokenDoc = await tokenRef.get();
+
+    console.log("📥 Token snapshot ricevuto");
+    console.log("📊 Exists:", tokenDoc.exists);
+
+    if (!tokenDoc.exists) {
+      console.warn("❌ Token non trovato nel DB");
+      statusBox.innerText = "❌ Token non valido o già usato";
+      statusBox.style.color = "red";
+      return;
+    }
+
+    const data = tokenDoc.data();
+
+    console.log("📦 Dati token:", data);
+
+    if (data.used) {
+      console.warn("⚠️ Token già usato");
+      statusBox.innerText = "❌ Token già utilizzato";
+      statusBox.style.color = "red";
+      return;
+    }
+
+    console.log("⏱ Controllo scadenza...");
+    console.log("Now:", Date.now(), "Expires:", data.expiresAt);
+
+    if (Date.now() > data.expiresAt) {
+      console.warn("⏳ Token scaduto");
+      statusBox.innerText = "❌ Token scaduto";
+      statusBox.style.color = "red";
+      return;
+    }
+
+    console.log("👤 Cercando utente con email:", data.email);
+
+    const userSnap = await db
+      .collection("users")
+      .where("email", "==", data.email)
+      .limit(1)
+      .get();
+
+    console.log("👥 Query utenti eseguita");
+    console.log("👥 Empty:", userSnap.empty);
+
+    if (userSnap.empty) {
+      console.error("❌ Utente non trovato per email:", data.email);
+      statusBox.innerText = "❌ Utente non trovato";
+      statusBox.style.color = "red";
+      return;
+    }
+
+    const userRef = userSnap.docs[0].ref;
+
+    console.log("✏️ Aggiornamento user emailVerified...");
+
+    await userRef.update({
+      emailVerified: true
+    });
+
+    console.log("✅ User aggiornato");
+
+    console.log("🧹 Marcatura token come usato...");
+
+    await tokenRef.update({
+      used: true,
+      usedAt: Date.now()
+    });
+
+    console.log("✅ Token aggiornato");
+
+    statusBox.innerText = "✅ Email verificata con successo!";
+    statusBox.style.color = "green";
+
+    console.log("🎉 Verifica completata");
+
+    setTimeout(() => {
+      console.log("🔁 Redirect login...");
+      window.location.href = "/login/signin";
+    }, 2000);
+
+    sendPersonalLinkEmail();
+
+  } catch (err) {
+    console.error("💥 ERRORE GENERALE VERIFY:", err);
+    statusBox.innerText = "❌ Errore server";
+    statusBox.style.color = "red";
+  }
+}
+
+async function sendPersonalLinkEmail() {
+  try {
+    console.log("📨 Invio email link personale...");
+
+    const tokenRef = db.collection("emailVerifications").doc(token);
+    const tokenDoc = await tokenRef.get();
+
+    if (!tokenDoc.exists) {
+      console.warn("❌ Token non valido per email link");
+      return;
+    }
+
+    const data = tokenDoc.data();
+
+    const response = await fetch("https://myfrem.api.friuliemergenze.it/api/sendPersonalLinkEmail", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        userEmail: data.email,
+        title: "Il link personale per il tuo profilo MyFrEM",
+        htmlContent: `
+          <div style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center">
+
+                  <table style="
+                    max-width:520px;
+                    width:100%;
+                    background:#ffffff;
+                    border-radius:14px;
+                    overflow:hidden;
+                    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+                  ">
+                    <tr>
+                      <td style="padding:35px;text-align:center;">
+
+                        <img
+                          src="https://friuliemergenze.it/assets/logo.png"
+                          style="width:80px;margin-bottom:20px;"
+                        >
+
+                        <h1 style="
+                          color:#00bcd4;
+                          margin:0;
+                          font-size:28px;
+                        ">
+                          Account verificato ✅
+                        </h1>
+
+                        <p style="
+                          font-size:18px;
+                          color:#333;
+                          margin-top:25px;
+                        ">
+                          Ciao 👋
+                        </p>
+
+                        <p style="
+                          color:#555;
+                          line-height:1.7;
+                          font-size:17px;
+                          margin-top:20px;
+                        ">
+                          Il tuo account <b>MyFrEM</b> è stato verificato con successo.
+                          <br><br>
+
+                          Da ora puoi accedere al tuo profilo personale
+                          e visualizzare tutte le informazioni del tuo account.
+                        </p>
+
+                        <a
+                          href="https://myfrem.friuliemergenze.it/profile?userid=${encodeURIComponent(data.userId)}"
+                          style="
+                            display:inline-block;
+                            padding:15px 24px;
+                            background:#00bcd4;
+                            color:#ffffff;
+                            text-decoration:none;
+                            border-radius:10px;
+                            font-weight:bold;
+                            margin-top:25px;
+                            font-size:16px;
+                          "
+                        >
+                          Vai al tuo profilo
+                        </a>
+
+                        <p style="
+                          color:#888;
+                          font-size:13px;
+                          margin-top:25px;
+                          line-height:1.6;
+                        ">
+                          Se il pulsante non funziona, copia questo link nel browser:
+                          <br><br>
+
+                          <a
+                            href="https://myfrem.friuliemergenze.it/profile?userid=${encodeURIComponent(data.userId)}"
+                            style="color:#00bcd4;"
+                          >
+                            https://myfrem.friuliemergenze.it/profile?userid=${encodeURIComponent(data.userId)}
+                          </a>
+                        </p>
+
+                        <p style="
+                          font-size:11px;
+                          color:#999;
+                          margin-top:25px;
+                          line-height:1.5;
+                        ">
+                          MyFrEM · Friuli Emergenze<br>
+                          Questa email conferma che il tuo account è stato verificato correttamente.
+                          <br><br>
+
+                          <a href="https://friuliemergenze.it">
+                            friuliemergenze.it
+                          </a>
+
+                          ·
+
+                          <a href="mailto:soem@friuliemergenze.it">
+                            soem@friuliemergenze.it
+                          </a>
+                        </p>
+
+                      </td>
+                    </tr>
+                  </table>
+
+                </td>
+              </tr>
+            </table>
+          </div>
+          `
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error("❌ Errore invio email:", result);
+      return;
+    }
+
+    console.log("✅ Email link personale inviata");
+
+  } catch (err) {
+    console.error("💥 Errore sendPersonalLinkEmail:", err);
+  }
+}
+
+verifyEmail();

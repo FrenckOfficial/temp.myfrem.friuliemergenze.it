@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard MyFrEM - La migliore piattaforma in Friuli-Venezia Giulia nel caricamento foto inerenti l'emergenza</title>
+  <link rel="stylesheet" href="/dashboard/dsh.css">
+  <link rel="shortcut icon" href="https://friuliemergenze.it/assets/logo.png" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="https://friuliemergenze.it/assets/logo.png" alt="MyFrEM Logo">
+        <h2>MyFrEM</h2>
+      </div>
+      <nav>
+        <a href="/dashboard" class="active">🏠 Home</a>
+        <a href="/dashboard/upload">📸 Carica una foto</a>
+        <a href="/dashboard/all-photos">📸 Le mie foto</a>
+        <a href="/dashboard/create-event/">🗂️ Crea un evento</a>
+        <a href="/dashboard/all-events/">🗂️ I miei eventi</a>
+        <a href="/dashboard/settings/">⚙️ Impostazioni</a>
+        <a href="/dashboard/contact/">📞 Contattaci</a>
+      </nav>
+      <button id="logoutBtn" class="logout">🚪 Logout</button>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <header class="header">
+        <h1>Ciao, <span id="userName"></span> 👋</h1>
+        <p>Benvenuto nella tua dashboard personale.</p>
+      </header>
+
+      <section class="newsletter-banner" id="newsBanner" style="display:none;">
+        <div class="newsletter-content">
+          <div>
+            <h2>📬 Newsletter Friuli Emergenze</h2>
+
+            <p>
+              Ricevi aggiornamenti sugli eventi,
+              nuove funzionalità e attività di Friuli Emergenze.
+            </p>
+          </div>
+
+          <button id="newsletterBtn">
+            Iscriviti
+          </button>
+        </div>
+      </section>
+
+      <section class="cards">
+        <div class="card">
+          <h3>📸 Foto caricate</h3>
+          <p id="totalPhotos">0</p>
+        </div>
+        <div class="card">
+          <h3>✅ Foto approvate</h3>
+          <p id="approvedPhotos">0</p>
+        </div>
+        <div class="card">
+          <h3>⏳ In attesa</h3>
+          <p id="pendingPhotos">0</p>
+        </div>
+        <div class="card">
+          <h3>🚫 Foto rifiutate</h3>
+          <p id="rejectedPhotos">0</p>
+        </div>
+      </section>
+
+      <section class="cards" style="margin-top: 40px;">
+        <div class="card">
+          <h3>🗂️ Eventi caricati</h3>
+          <p id="totalEvents">0</p>
+        </div>
+        <div class="card">
+          <h3>✅ Eventi approvati</h3>
+          <p id="approvedEvents">0</p>
+        </div>
+        <div class="card">
+          <h3>⏳ In attesa</h3>
+          <p id="pendingEvents">0</p>
+        </div>
+        <div class="card">
+          <h3>🚫 Eventi rifiutati</h3>
+          <p id="rejectedEvents">0</p>
+        </div>
+        <div class="card">
+          <h3>💯 Eventi organizzati</h3>
+          <p id="organizedEvents">0</p>
+        </div>
+      </section>
+
+      <section id="eventsList1">
+        <h2>📅 Eventi</h2>
+        <section id="eventsList">
+          <p>Nessun evento disponibile per l'iscrizione.</p>
+        </section>
+      </section>
+
+      <section class="activity" style="margin-top: 40px;">
+        <h2>Ultime attività</h2>
+        <ul id="activityList">
+          <!-- Le attività verranno inserite qui tramite JavaScript -->
+        </ul>
+      </section>
+    </main>
+
+  <script type="module" src="/dashboard/dsh.js"></script>
+</body>
+</html>

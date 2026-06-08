@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuovo - Documenti PDF | MyFrEM - La migliore piattaforma in Friuli-Venezia Giulia nel caricamento foto inerenti l'emergenza</title>
+  <link rel="stylesheet" href="/staff/dashboard/staff.css">
+  <link rel="shortcut icon" href="https://friuliemergenze.it/assets/logo.png" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="module" defer src="/staff/dashboard/management/pdfGenerator/new/pdfBuilder.js"></script>
+  <script type="module" defer src="/staff/dashboard/management/pdfGenerator/new/pdfFunctions.js"></script>
+  
+  <style>
+    #prevContent::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #prevContent::-webkit-scrollbar-track {
+      background: #2a2a2a;
+    }
+
+    #prevContent::-webkit-scrollbar-thumb {
+      background: #e67e22;
+      border-radius: 3px;
+    }
+
+    #prevContent::-webkit-scrollbar-thumb:hover {
+      background: #d35400;
+    }
+
+    @media (max-width: 768px) {
+      #pdfPreview {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <aside class="sidebar">
+    <div class="logo">
+      <img src="https://friuliemergenze.it/assets/logo.png" alt="Logo MyFrEM">
+      <h2>MyFrEM Staff</h2>
+    </div>
+
+    <nav>
+      <a href="/staff">📊 Dashboard</a>
+      <a href="/staff/dashboard/photos/">🖼️ Moderazione foto</a>
+      <a href="/staff/dashboard/users/" class="active">👥 Funzionalità</a>
+      <a href="/staff/dashboard/events/">🗂️ Moderazione eventi</a>
+      <a href="/staff/dashboard/kick-reports/">🗂️ Rapporti di espulsione</a>
+      <a href="/staff/dashboard/contactrq/">📞 Richieste di assistenza</a>
+      <a href="/staff/dashboard/settings/">⚙️ Impostazioni</a>
+    </nav>
+
+    <button id="logoutBtn" class="logout">🚪 Logout</button>
+  </aside>
+
+  <main class="main-content">
+    <div class="top-bar">
+      <h1>Nuovo Documento PDF - 👥 Funzionalità</h1>
+    </div>
+    <p>
+      Crea documenti PDF ufficiali (verbali, report, attestati, liste).
+    </p>
+
+    <div class="activity-box">
+      <form id="pdfForm">
+        <div id="statusMsg"></div>
+        <div class="form-row">
+          <div class="form-col">
+            <label>Titolo documento:</label>
+            <input type="text" id="title" class="photo-link-input" placeholder="Es: Verbale Riunione Staff" required>
+          </div>
+
+          <div class="form-col">
+            <label>Data:</label>
+            <input type="date" id="date" class="photo-link-input" required>
+          </div>
+
+          <div class="form-col">
+            <label>Tipo documento:</label>
+            <select id="type" class="photo-link-input" required>
+              <option value="">-- Seleziona tipo --</option>
+              <option value="verbale">Verbale</option>
+              <option value="report">Report</option>
+              <option value="attestato">Attestato</option>
+              <option value="lista">Lista</option>
+              <option value="altro">Altro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Contenuto documento:</label>
+          <textarea id="content" class="photo-link-input" style="height: 220px;"
+            placeholder="Scrivi il contenuto del documento..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Firma / autore:</label>
+          <input type="text" id="author" class="photo-link-input" placeholder="Es: Staff MyFrEM">
+        </div>
+
+        <div class="preview-box" style="margin-top:20px;">
+          <h3>Preview documento:</h3>
+
+          <div id="pdfPreview" style="
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+          ">
+            
+            <div style="
+              background: linear-gradient(135deg, #2980b9 0%, #1e5f8a 100%);
+              color: white;
+              padding: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+            ">
+              <div>
+                <img style="width: 50px; height: 50px;" src="/assets/icons/logo.png" alt="Logo MyFrEM">
+              </div>
+              <div style="text-align: right; flex-grow: 1; padding-left: 20px;">
+                <h2 id="prevTitle" style="
+                  font-size: 20px;
+                  font-weight: bold;
+                  margin: 0;
+                  word-break: break-word;
+                  color: white;
+                  margin-top: 10px;
+                ">Titolo documento</h2>
+              </div>
+            </div>
+
+            <div style="
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 20px;
+              padding: 15px 20px;
+              background: #252525;
+              border-bottom: 2px solid #e67e22;
+              color: #ecf0f1;
+            ">
+              <div>
+                <div style="color: #e67e22; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Data</div>
+                <div id="prevDate" style="color: #2c3e50; font-size: 13px; font-weight: 500; word-break: break-word;">Data</div>
+              </div>
+              <div>
+                <div style="color: #e67e22; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Tipo</div>
+                <div id="prevType" style="color: #2c3e50; font-size: 13px; font-weight: 500; word-break: break-word;">Tipo</div>
+              </div>
+              <div>
+                <div style="color: #e67e22; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Autore</div>
+                <div id="prevAuthor" style="color: #2c3e50; font-size: 13px; font-weight: 500; word-break: break-word;">Autore</div>
+              </div>
+            </div>
+
+            <div style="height: 2px; background: #e67e22; margin: 0;"></div>
+
+            <div id="prevContent" style="
+              padding: 20px;
+              background: #1a1a1a;
+              color: #2c3e50;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              font-size: 12px;
+              line-height: 1.6;
+              min-height: 200px;
+              max-height: 300px;
+              overflow-y: auto;
+            ">
+              Contenuto...
+            </div>
+
+            <div style="
+              padding: 15px 20px;
+              border-top: 1px solid #34495e;
+              text-align: center;
+              font-size: 9px;
+              color: #7f8c8d;
+              background: #252525;
+            ">
+              MyFrEM Staff System
+            </div>
+
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:20px;">
+          <button type="button" id="generatePdf" class="btn-primary">
+            Genera PDF
+          </button>
+
+          <button type="button" id="clearForm" class="btn-secondary">
+            Pulisci
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

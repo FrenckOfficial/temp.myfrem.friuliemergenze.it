@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verifica email - Piattaforma MyFrEM - La migliore in Friuli-Venezia Giulia nel caricamento foto inerenti l'emergenza</title>
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" />
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="shortcut icon" href="https://friuliemergenze.it/assets/logo.png" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+
+  <header class="hero">
+    <img src="https://friuliemergenze.it/assets/logo.png" class="logo" />
+    <h1>Verifica email</h1>
+    <p class="subtitle">Completa la registrazione del tuo account MyFrEM</p>
+  </header>
+
+  <section class="about" style="text-align:center;margin-top:50px;">
+    <h2>Ultimo passo</h2>
+    <p>Stiamo verificando il tuo account...</p>
+
+    <div id="statusBox" style="
+      margin-top:20px;
+      padding:15px;
+      border-radius:10px;
+      background:#f5f5f5;
+      text-align:center;
+      font-weight:bold;
+    ">
+      Verifica in corso...
+    </div>
+  </section>
+
+  <section class="cta">
+    <h2>Problemi?</h2>
+    <p>Se il link è scaduto puoi rifare la registrazione.</p>
+    <a href="/login/signup" class="cta-btn">Riprova</a>
+  </section>
+
+  <footer>
+    <p>© 2026 Friuli Emergenze - Tutti i diritti riservati</p>
+    <p>
+      <a href="https://myfrem.friuliemergenze.it/login/signin">Login</a> · 
+      <a href="https://myfrem.friuliemergenze.it/login/signup">Registrati</a> · 
+      <a href="https://friuliemergenze.it/policies/privacy-policy" target="_blank">Privacy Policy</a> · 
+      <a href="https://friuliemergenze.it/contact-us" target="_blank">Contatti</a>
+    </p>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- config -->
+  <script type="module" src="/verify-email/veruser.js"></script>
+
+</body>
+</html>
