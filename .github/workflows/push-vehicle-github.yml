@@ -4,13 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       draftId:
-        description: 'ID della bozza da pubblicare'
+        description: "ID della bozza da pubblicare"
         required: true
+
+permissions:
+  contents: write
 
 jobs:
   push-to-github:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install dependencies
         run: npm install firebase-admin @octokit/rest
