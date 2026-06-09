@@ -507,6 +507,7 @@ class VehicleDraftsManager {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("VERSIONE 12 GIUGNO 2025");
     console.log('🎯 DOMContentLoaded - Inizializzazione manager');
     window.vehicleDraftsManager = new VehicleDraftsManager();
 
