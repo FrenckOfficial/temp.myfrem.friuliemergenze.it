@@ -123,8 +123,12 @@ export async function parseActivity(activity, date) {
             return `[${date}] PDF "${activity.documentTitle}" generato da ${staff}.`;
         }
 
+        case "vehicle_draft_created": {
+            return `[${date}] Nuovo bozza veicolo (${activity.photoId}) creato da ${activity.staffMember}. ID ${activity.draftId}.`;
+        }
+
         default:
             console.warn("Tipo attività sconosciuto:", activity);
-            return `[${date}] Attività sconosciuta (${activity.type || "senza tipo"}).`;
+            return `[${date}] Attività sconosciuta (${activity.type || "Tipo non definito"}).`;
     }
 }
