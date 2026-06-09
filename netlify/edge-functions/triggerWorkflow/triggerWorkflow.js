@@ -56,6 +56,12 @@ export default async (request, context) => {
   console.log("📨 GitHub status:", githubResponse.status);
   console.log("📨 GitHub body:", body);
 
+  if (githubResponse.status === 204) {
+    return new Response(null, {
+      status: 204
+    });
+  }
+
   return new Response(body, {
     status: githubResponse.status,
     headers: {
