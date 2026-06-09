@@ -3,9 +3,25 @@ import { Octokit } from "@octokit/rest";
 import fs from "fs";
 import path from "path";
 
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION:", err);
+});
+
+console.log("🚀 Avvio pushVehicle.mjs");
+
+console.log("FIREBASE_PROJECT_ID:", !!process.env.FIREBASE_PROJECT_ID);
+console.log("FIREBASE_CLIENT_EMAIL:", !!process.env.FIREBASE_CLIENT_EMAIL);
+console.log("FIREBASE_PRIVATE_KEY:", !!process.env.FIREBASE_PRIVATE_KEY);
+console.log("GITHUB_TOKEN:", !!process.env.GITHUB_TOKEN);
+console.log("DRAFT_ID:", process.env.DRAFT_ID);
+
 const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
 };
 
@@ -23,6 +39,8 @@ const GITHUB_OWNER = "FrenckOfficial";
 const GITHUB_REPO = "friuliemergenze.it";
 const GITHUB_BRANCH = "main";
 
+console.log("🔍 Verifica repository...");
+
 const repoInfo = await octokit.repos.get({
   owner: GITHUB_OWNER,
   repo: GITHUB_REPO,
@@ -31,167 +49,198 @@ const repoInfo = await octokit.repos.get({
 console.log("Repository trovato:", repoInfo.data.full_name);
 
 async function pushVehicleToGithub() {
-  try {
-    const draftId = process.env.DRAFT_ID;
+  const draftId = process.env.DRAFT_ID;
 
-    if (!draftId) {
-      throw new Error("DRAFT_ID non fornito");
-    }
+  if (!draftId) {
+    throw new Error("DRAFT_ID non fornito");
+  }
 
-    console.log(`\n📦 Pubblicazione bozza: ${draftId}`);
+  console.log("📦 Draft:", draftId);
 
-    const draftSnapshot = await db
-      .collection("vehiclesDraft")
-      .doc(draftId)
-      .get();
+  const draftSnapshot = await db
+    .collection("vehiclesDraft")
+    .doc(draftId)
+    .get();
 
-    if (!draftSnapshot.exists) {
-      throw new Error(`Bozza ${draftId} non trovata`);
-    }
+  if (!draftSnapshot.exists) {
+    throw new Error(`Bozza ${draftId} non trovata`);
+  }
 
-    const draft = draftSnapshot.data();
-    console.log(`✅ Bozza caricata: ${draft.fileName}`);
+  const draft = draftSnapshot.data();
 
-    const fileName = draft.fileName.replace(/\.[^.]+$/, "");
-    const vehicleData = draft.data;
+  console.log("✅ Bozza caricata:", draft.fileName);
 
-    await updateGalleryJson(fileName, vehicleData, draft.photoUrl);
-    console.log(`✅ gallery.json aggiornato`);
+  const fileName = draft.fileName.replace(/\.[^.]+$/, "");
+  const vehicleData = draft.data || {};
 
-    await createVehicleDetailsPage(fileName, vehicleData);
-    console.log(
-      `✅ Pagina dettagli creata: gallery/scheda/${fileName}/index.html`,
-    );
+  await updateGalleryJson(
+    fileName,
+    vehicleData,
+    draft.photoUrl
+  );
 
-    await db.collection("vehiclesDraft").doc(draftId).update({
+  console.log("✅ gallery.json aggiornato");
+
+  await createVehicleDetailsPage(
+    fileName,
+    vehicleData
+  );
+
+  console.log("✅ Pagina HTML creata");
+
+  await db.collection("vehiclesDraft")
+    .doc(draftId)
+    .update({
       status: "published",
       publishedAt: admin.firestore.Timestamp.now(),
-      publishedBy: "github-action",
+      publishedBy: "github-action"
     });
-    console.log(`✅ Status bozza aggiornato a 'published'`);
 
-    console.log(
-      `\n🎉 Veicolo "${vehicleData.title}" pubblicato con successo!\n`,
-    );
-  } catch (error) {
-    console.error(`\n❌ Errore: ${error.message}\n`);
-
-    try {
-      const draftId = process.env.DRAFT_ID;
-      if (draftId) {
-        await db.collection("vehiclesDraft").doc(draftId).update({
-          status: "error",
-          errorMessage: error.message,
-          errorAt: admin.firestore.Timestamp.now(),
-        });
-      }
-    } catch (updateError) {
-      console.error(
-        "Errore nell'aggiornamento dello stato:",
-        updateError.message,
-      );
-    }
-
-    process.exit(1);
-  }
+  console.log("🎉 Pubblicazione completata");
 }
 
-async function updateGalleryJson(fileName, vehicleData, photoUrl) {
-  try {
-    console.log("Sto leggendo gallery.json...");
-    const response = await octokit.repos.getContent({
+async function updateGalleryJson(
+  fileName,
+  vehicleData,
+  photoUrl
+) {
+  console.log("📖 Lettura gallery.json");
+
+  const response =
+    await octokit.repos.getContent({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
       path: "gallery.json",
     });
-    console.log("gallery.json letto correttamente");
 
-    const currentContent = JSON.parse(
-      Buffer.from(response.data.content, "base64").toString(),
-    );
+  const content = JSON.parse(
+    Buffer.from(
+      response.data.content,
+      "base64"
+    ).toString()
+  );
 
-    if (!currentContent.vehicles) {
-      currentContent.vehicles = [];
-    }
-
-    const vehicleIndex = currentContent.vehicles.findIndex(
-      (v) => v.id === fileName,
-    );
-
-    const newVehicle = {
-      id: fileName,
-      title: vehicleData.title,
-      brand: vehicleData.brand,
-      model: vehicleData.model,
-      plate: vehicleData.plate,
-      image: `gallery/images/${photoUrl.split("/").pop()}`,
-      detailsUrl: `gallery/scheda/${fileName}/`,
-      published: new Date().toISOString(),
-    };
-
-    if (vehicleIndex >= 0) {
-      currentContent.vehicles[vehicleIndex] = newVehicle;
-    } else {
-      currentContent.vehicles.push(newVehicle);
-    }
-
-    console.log("Sto salvando gallery.json...");
-    await octokit.repos.createOrUpdateFileContents({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      path: "gallery.json",
-      message: `🚗 Add vehicle: ${vehicleData.title} (${vehicleData.plate})`,
-      content: Buffer.from(JSON.stringify(currentContent, null, 2)).toString(
-        "base64",
-      ),
-      sha: response.data.sha,
-      branch: GITHUB_BRANCH,
-    });
-    console.log("gallery.json salvato!");
-  } catch (error) {
-    throw new Error(
-      `Errore nell'aggiornamento di gallery.json: ${error.message}`,
-    );
+  if (!content.vehicles) {
+    content.vehicles = [];
   }
+
+  const imageName = photoUrl
+    ? photoUrl.split("/").pop()
+    : "";
+
+  const vehicle = {
+    id: fileName,
+    title: vehicleData.title || "",
+    brand: vehicleData.brand || "",
+    model: vehicleData.model || "",
+    plate: vehicleData.plate || "",
+    image: `gallery/images/${imageName}`,
+    detailsUrl: `gallery/scheda/${fileName}/`,
+    published: new Date().toISOString(),
+  };
+
+  const existingIndex =
+    content.vehicles.findIndex(
+      (v) => v.id === fileName
+    );
+
+  if (existingIndex >= 0) {
+    content.vehicles[existingIndex] = vehicle;
+  } else {
+    content.vehicles.push(vehicle);
+  }
+
+  console.log("💾 Salvataggio gallery.json");
+
+  await octokit.repos.createOrUpdateFileContents({
+    owner: GITHUB_OWNER,
+    repo: GITHUB_REPO,
+    path: "gallery.json",
+    message: `🚗 Add vehicle ${vehicleData.title}`,
+    content: Buffer
+      .from(JSON.stringify(content, null, 2))
+      .toString("base64"),
+    sha: response.data.sha,
+    branch: GITHUB_BRANCH,
+  });
 }
 
-async function createVehicleDetailsPage(fileName, vehicleData) {
+async function createVehicleDetailsPage(
+  fileName,
+  vehicleData
+) {
+  const html =
+    generateVehicleHtml(
+      vehicleData,
+      fileName
+    );
+
   try {
-    const htmlContent = generateVehicleHtml(vehicleData, fileName);
+    const existing =
+      await octokit.repos.getContent({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        path: `gallery/scheda/${fileName}/index.html`,
+      });
 
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
       path: `gallery/scheda/${fileName}/index.html`,
-      message: `📄 Add vehicle details for ${vehicleData.title}`,
-      content: Buffer.from(htmlContent).toString("base64"),
+      message: `📄 Update vehicle ${vehicleData.title}`,
+      content: Buffer
+        .from(html)
+        .toString("base64"),
+      sha: existing.data.sha,
       branch: GITHUB_BRANCH,
     });
-  } catch (error) {
-    throw new Error(
-      `Errore nella creazione della pagina dettagli: ${error.message}`,
-    );
+
+  } catch {
+    await octokit.repos.createOrUpdateFileContents({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      path: `gallery/scheda/${fileName}/index.html`,
+      message: `📄 Add vehicle ${vehicleData.title}`,
+      content: Buffer
+        .from(html)
+        .toString("base64"),
+      branch: GITHUB_BRANCH,
+    });
+  }
+}
+
+function getServiceLabel(service) {
+  switch (service) {
+    case "ambulanza":
+      return "Emergenza Sanitaria Territoriale";
+
+    case "pompieri":
+      return "Soccorso Tecnico Urgente";
+
+    case "protezione_civile":
+      return "Protezione Civile";
+
+    case "soccorso_alpino":
+      return "Soccorso Alpino";
+
+    case "guardia_costiera":
+      return "Guardia Costiera";
+
+    case "polizia_di_stato":
+    case "carabinieri":
+    case "guardia_di_finanza":
+    case "polizia_locale":
+      return "Ordine Pubblico";
+
+    default:
+      return service || "N/A";
   }
 }
 
 function generateVehicleHtml(vehicleData, fileName) {
   const imageFileName = vehicleData.imageFileName || `${fileName}.jpg`;
   const pageUrl = `https://friuliemergenze.it/gallery/scheda/${fileName}`;
-  let service = "N/A";
-
-  if (vehicleData.service === "ambulanza") {
-    service = "Emergenza Sanitaria Territoriale"
-  } else if (vehicleData.service === "pompieri") {
-    service = "Soccorso Tecnico Urgente"
-  } else if (vehicleData.service === "protezione_civile") {
-    service = "Protezione Civile"
-  } else if (vehicleData.service === ["polizia_di_stato", "carabinieri", "guardia_di_finanza", "polizia_locale"]) {
-    service = "Ordine Pubblico"
-  } else if (vehicleData.service === "soccorso_alpino") {
-    service = "Soccorso Alpino"
-  } else if (vehicleData.service === "guardia_costiera") {
-    service = "Guardia Costiera"
-  } else if (vehicleData.service === "")
+  const service = getServiceLabel(vehicleData.service);
 
   return `<!doctype html>
 <html lang="it">
@@ -200,7 +249,7 @@ function generateVehicleHtml(vehicleData, fileName) {
     <script src="/heading.js"><\/script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-    <title>${escapeHtml(vehicleData.title)} | Friuli Emergenze</title>
+    <title>${escapeHtml(vehicleData.title)} - ${escapeHtml(service)} | Friuli Emergenze</title>
     <script src="/heading.js"><\/script>
 
     <link rel="stylesheet" href="/style.css" />
@@ -354,6 +403,10 @@ function generateVehicleHtml(vehicleData, fileName) {
 }
 
 function escapeHtml(text) {
+  if (text === null || text === undefined) {
+    return "";
+  }
+
   const map = {
     "&": "&amp;",
     "<": "&lt;",
@@ -361,10 +414,38 @@ function escapeHtml(text) {
     '"': "&quot;",
     "'": "&#039;",
   };
-  return text.replace(/[&<>"']/g, (m) => map[m]);
+
+  return String(text)
+    .replace(/[&<>"']/g, (m) => map[m]);
 }
 
-pushVehicleToGithub().catch((error) => {
-  console.error("Fatal error:", error);
-  process.exit(1);
-});
+pushVehicleToGithub()
+  .then(() => {
+    console.log("✅ Fine workflow");
+    process.exit(0);
+  })
+  .catch(async (error) => {
+    console.error("❌ ERRORE:", error);
+
+    try {
+      const draftId = process.env.DRAFT_ID;
+
+      if (draftId) {
+        await db.collection("vehiclesDraft")
+          .doc(draftId)
+          .update({
+            status: "error",
+            errorMessage: error.message,
+            errorAt:
+              admin.firestore.Timestamp.now(),
+          });
+      }
+    } catch (e) {
+      console.error(
+        "Errore aggiornamento Firestore:",
+        e
+      );
+    }
+
+    process.exit(1);
+  });
