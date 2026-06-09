@@ -32,6 +32,31 @@ logoutBtn.addEventListener('click', async () => {
     window.location.href = '/login';
 });
 
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "/login";
+    return;
+  }
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    const allowedRoles = ["simplestaff", "modstaff", "advstaff", "advstaffplus", "superadmin"];
+
+    if (!userSnap.exists() || !allowedRoles.includes(userSnap.data().role)) {
+      window.location.href = "/dashboard";
+      return;
+    }
+
+    await loadUsersMap();
+    loadPendingPhotos();
+  } catch (err) {
+    console.error("Errore verifica staff:", err);
+    setStatus("Errore verifica permessi", "error");
+  }
+});
+
 console.log('✅ Firebase inizializzato');
 
 class VehicleDraftsManager {
