@@ -113,7 +113,7 @@ async function updateGalleryJson(
     await octokit.repos.getContent({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
-      path: "/gallery.json",
+      path: "gallery.json",
     });
 
   const content = JSON.parse(
@@ -136,7 +136,7 @@ async function updateGalleryJson(
     image: photoUrl || "",
     category: vehicleData.service || "",
     spotter: "",
-    link: `/gallery/scheda/${fileName}/`,
+    link: `gallery/scheda/${fileName}/`,
   };
 
   const existingIndex = content.vehicles.findIndex((v) => v.link === `/gallery/scheda/${fileName}/`);
@@ -153,7 +153,7 @@ async function updateGalleryJson(
   await octokit.repos.createOrUpdateFileContents({
     owner: GITHUB_OWNER,
     repo: GITHUB_REPO,
-    path: "/gallery.json",
+    path: "gallery.json",
     message: `🚗 Add vehicle ${vehicleData.title}`,
     content: Buffer
       .from(JSON.stringify(content, null, 2))
@@ -181,13 +181,13 @@ async function createVehicleDetailsPage(
       await octokit.repos.getContent({
         owner: GITHUB_OWNER,
         repo: GITHUB_REPO,
-        path: `/gallery/scheda/${fileName}/index.html`,
+        path: `gallery/scheda/${fileName}/index.html`,
       });
 
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
-      path: `/gallery/scheda/${fileName}/index.html`,
+      path: `gallery/scheda/${fileName}/index.html`,
       message: `📄 Update vehicle ${vehicleData.title}`,
       content: Buffer
         .from(html)
@@ -200,7 +200,7 @@ async function createVehicleDetailsPage(
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
-      path: `/gallery/scheda/${fileName}/index.html`,
+      path: `gallery/scheda/${fileName}/index.html`,
       message: `📄 Add vehicle ${vehicleData.title}`,
       content: Buffer
         .from(html)
