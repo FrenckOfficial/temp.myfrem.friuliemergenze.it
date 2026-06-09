@@ -175,7 +175,8 @@ async function createVehicleDetailsPage(
     generateVehicleHtml(
       vehicleData,
       fileName,
-      slug
+      slug,
+      photoUrl
     );
 
   try {
@@ -252,7 +253,7 @@ function generateVehicleHtml(vehicleData, fileName, slug, photoUrl) {
     <script src="/heading.js"><\/script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-    <title>${escapeHtml(vehicleData.title)} - ${escapeHtml(service)} | Friuli Emergenze</title>
+    <title>${escapeHtml(vehicleData.title)} | Friuli Emergenze</title>
     <script src="/heading.js"><\/script>
 
     <link rel="stylesheet" href="/style.css" />
