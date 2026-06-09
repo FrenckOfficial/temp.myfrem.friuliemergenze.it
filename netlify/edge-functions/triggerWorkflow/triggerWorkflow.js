@@ -1,7 +1,30 @@
 export default async (request, context) => {
   console.log("🚀 Function triggerWorkflow avviata");
 
-  const { draftId } = await request.json();
+  console.log("METHOD:", request.method);
+  console.log("URL:", request.url);
+
+  const rawBody = await request.text();
+
+  console.log("RAW BODY:", rawBody);
+
+  if (!rawBody) {
+    return new Response("Body vuoto", {
+      status: 400
+    });
+  }
+
+  let draftId;
+
+  try {
+    ({ draftId } = JSON.parse(rawBody));
+  } catch (err) {
+    console.error("JSON non valido:", err);
+
+    return new Response("JSON non valido", {
+      status: 400
+    });
+  }
 
   console.log("📦 Draft ID:", draftId);
 
