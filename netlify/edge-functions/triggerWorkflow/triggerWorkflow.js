@@ -29,7 +29,7 @@ export default async (request, context) => {
   console.log("📦 Draft ID:", draftId);
 
   const githubResponse = await fetch(
-    "https://api.github.com/repos/FrenckOfficial/temp.myfrem.friuliemergenze.it/actions/workflows/push-vehicle-github.yml/dispatches",
+    "https://api.github.com/user",
     {
       method: "POST",
       headers: {
