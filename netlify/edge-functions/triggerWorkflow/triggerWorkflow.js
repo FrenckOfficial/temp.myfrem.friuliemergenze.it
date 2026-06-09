@@ -51,15 +51,15 @@ export default async (request, context) => {
     }
   );
 
-  const body = await githubResponse.text();
+  // const body = await githubResponse.text();
 
   console.log("📨 GitHub status:", githubResponse.status);
-  console.log("📨 GitHub body:", body);
+  // console.log("📨 GitHub body:", body);
 
-  return new Response(body, {
-    status: githubResponse.status,
-    headers: {
-      "content-type": "application/json"
-    }
-  });
+  // return new Response(body, {
+  //   status: githubResponse.status,
+  //   headers: {
+  //     "content-type": "application/json"
+  //   }
+  // });
 };
