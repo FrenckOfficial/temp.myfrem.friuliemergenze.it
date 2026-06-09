@@ -372,7 +372,7 @@ class VehicleDraftsManager {
         console.log("🚀 Draft ID:", draftId);
 
         const response = await fetch(
-            "/netlify/edge-functions/triggerWorkflow/triggerWorkflow",
+            "/.netlify/functions/triggerWorkflow",
             {
                 method: "POST",
                 headers: {
