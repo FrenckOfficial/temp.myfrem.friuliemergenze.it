@@ -77,6 +77,7 @@ async function pushVehicleToGithub() {
   await updateGalleryJson(
     fileName,
     vehicleData,
+    slug,
     draft.photoUrl
   );
 
@@ -105,6 +106,7 @@ async function pushVehicleToGithub() {
 async function updateGalleryJson(
   fileName,
   vehicleData,
+  slug,
   photoUrl
 ) {
   console.log("📖 Lettura gallery.json");
@@ -123,8 +125,8 @@ async function updateGalleryJson(
     ).toString()
   );
 
-  if (!content.vehicles) {
-    content.vehicles = [];
+  if (!Array.isArray(content)) {
+    throw new Error("gallery.json non è un array");
   }
 
   const imageName = photoUrl
@@ -136,15 +138,15 @@ async function updateGalleryJson(
     image: photoUrl || "",
     category: vehicleData.service || "",
     spotter: "",
-    link: `gallery/scheda/${fileName}/`,
+    link: `/gallery/scheda/${slug}/`,
   };
 
-  const existingIndex = content.vehicles.findIndex((v) => v.link === `/gallery/scheda/${fileName}/`);
+  const existingIndex = content.findIndex((v) => v.link === `/gallery/scheda/${slug}/`);
 
   if (existingIndex >= 0) {
-    content.vehicles[existingIndex] = vehicle;
+    content[existingIndex] = vehicle;
   } else {
-    content.vehicles.push(vehicle);
+    content.push(vehicle);
   }
 
   console.log("💾 Salvataggio gallery.json");
@@ -181,13 +183,13 @@ async function createVehicleDetailsPage(
       await octokit.repos.getContent({
         owner: GITHUB_OWNER,
         repo: GITHUB_REPO,
-        path: `gallery/scheda/${fileName}/index.html`,
+        path: `gallery/scheda/${slug}/index.html`,
       });
 
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
-      path: `gallery/scheda/${fileName}/index.html`,
+      path: `gallery/scheda/${slug}/index.html`,
       message: `📄 Update vehicle ${vehicleData.title}`,
       content: Buffer
         .from(html)
@@ -200,7 +202,7 @@ async function createVehicleDetailsPage(
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
-      path: `gallery/scheda/${fileName}/index.html`,
+      path: `gallery/scheda/${slug}/index.html`,
       message: `📄 Add vehicle ${vehicleData.title}`,
       content: Buffer
         .from(html)
