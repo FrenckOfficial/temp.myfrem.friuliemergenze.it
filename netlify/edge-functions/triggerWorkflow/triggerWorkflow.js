@@ -34,9 +34,9 @@ export default async (request, context) => {
   console.log("📦 Draft ID:", draftId);
 
   const githubResponse = await fetch(
-    "https://api.github.com/user",
+    "https://api.github.com/repos/FrenckOfficial/temp.myfrem.friuliemergenze.it",
     {
-      method: "POST",
+      method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/vnd.github+json",
