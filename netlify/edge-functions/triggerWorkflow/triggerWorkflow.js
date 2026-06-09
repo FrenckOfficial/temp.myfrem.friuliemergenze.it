@@ -42,24 +42,24 @@ export default async (request, context) => {
         Accept: "application/vnd.github+json",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        ref: "main",
-        inputs: {
-          draftId
-        }
-      })
+      // body: JSON.stringify({
+      //   ref: "main",
+      //   inputs: {
+      //     draftId
+      //   }
+      // })
     }
   );
 
-  // const body = await githubResponse.text();
+  const body = await githubResponse.text();
 
   console.log("📨 GitHub status:", githubResponse.status);
-  // console.log("📨 GitHub body:", body);
+  console.log("📨 GitHub body:", body);
 
-  // return new Response(body, {
-  //   status: githubResponse.status,
-  //   headers: {
-  //     "content-type": "application/json"
-  //   }
-  // });
+  return new Response(body, {
+    status: githubResponse.status,
+    headers: {
+      "content-type": "application/json"
+    }
+  });
 };
