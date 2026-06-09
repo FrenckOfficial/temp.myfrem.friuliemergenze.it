@@ -34,20 +34,20 @@ export default async (request, context) => {
   console.log("📦 Draft ID:", draftId);
 
   const githubResponse = await fetch(
-    "https://api.github.com/repos/FrenckOfficial/temp.myfrem.friuliemergenze.it/actions/workflows",
+    "https://api.github.com/repos/FrenckOfficial/temp.myfrem.friuliemergenze.it/actions/workflows/291362612/dispatches",
     {
-      method: "GET",
+      method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/vnd.github+json",
         "Content-Type": "application/json"
       },
-      // body: JSON.stringify({
-      //   ref: "main",
-      //   inputs: {
-      //     draftId
-      //   }
-      // })
+      body: JSON.stringify({
+        ref: "main",
+        inputs: {
+          draftId
+        }
+      })
     }
   );
 
