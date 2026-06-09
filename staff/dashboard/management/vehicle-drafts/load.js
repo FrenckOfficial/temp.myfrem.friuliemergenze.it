@@ -341,6 +341,8 @@ class VehicleDraftsManager {
                 updatedBy: currentUser || 'Staff User'
             });
 
+            await this.triggerGithubWorkflow(this.currentDraftId);
+
             console.log('✅ updateDoc completato!');
 
             draft.data = vehicleData;
@@ -363,6 +365,38 @@ class VehicleDraftsManager {
         } finally {
             this.isSaving = false;
         }
+    }
+
+    async triggerGithubWorkflow(draftId) {
+        console.log("🚀 Trigger workflow GitHub");
+        console.log("🚀 Draft ID:", draftId);
+
+        const response = await fetch(
+            "/.netlify/functions/triggerWorkflow",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    draftId
+                })
+            }
+        );
+
+        console.log("🚀 Status:", response.status);
+
+        const text = await response.text();
+
+        console.log("🚀 Response body:", text);
+
+        if (!response.ok) {
+            throw new Error(
+                `Workflow error (${response.status}): ${text}`
+            );
+        }
+
+        console.log("✅ Workflow avviato correttamente");
     }
 
     validateForm() {

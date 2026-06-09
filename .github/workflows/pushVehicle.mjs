@@ -23,6 +23,13 @@ const GITHUB_OWNER = "FrenckOfficial";
 const GITHUB_REPO = "friuliemergenze.it";
 const GITHUB_BRANCH = "main";
 
+const repoInfo = await octokit.repos.get({
+  owner: GITHUB_OWNER,
+  repo: GITHUB_REPO,
+});
+
+console.log("Repository trovato:", repoInfo.data.full_name);
+
 async function pushVehicleToGithub() {
   try {
     const draftId = process.env.DRAFT_ID;
@@ -91,11 +98,13 @@ async function pushVehicleToGithub() {
 
 async function updateGalleryJson(fileName, vehicleData, photoUrl) {
   try {
+    console.log("Sto leggendo gallery.json...");
     const response = await octokit.repos.getContent({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
       path: "gallery.json",
     });
+    console.log("gallery.json letto correttamente");
 
     const currentContent = JSON.parse(
       Buffer.from(response.data.content, "base64").toString(),
@@ -126,6 +135,7 @@ async function updateGalleryJson(fileName, vehicleData, photoUrl) {
       currentContent.vehicles.push(newVehicle);
     }
 
+    console.log("Sto salvando gallery.json...");
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
@@ -137,6 +147,7 @@ async function updateGalleryJson(fileName, vehicleData, photoUrl) {
       sha: response.data.sha,
       branch: GITHUB_BRANCH,
     });
+    console.log("gallery.json salvato!");
   } catch (error) {
     throw new Error(
       `Errore nell'aggiornamento di gallery.json: ${error.message}`,
@@ -146,7 +157,7 @@ async function updateGalleryJson(fileName, vehicleData, photoUrl) {
 
 async function createVehicleDetailsPage(fileName, vehicleData) {
   try {
-    const htmlContent = generateVehicleHtml(vehicleData);
+    const htmlContent = generateVehicleHtml(vehicleData, fileName);
 
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
@@ -166,6 +177,21 @@ async function createVehicleDetailsPage(fileName, vehicleData) {
 function generateVehicleHtml(vehicleData, fileName) {
   const imageFileName = vehicleData.imageFileName || `${fileName}.jpg`;
   const pageUrl = `https://friuliemergenze.it/gallery/scheda/${fileName}`;
+  let service = "N/A";
+
+  if (vehicleData.service === "ambulanza") {
+    service = "Emergenza Sanitaria Territoriale"
+  } else if (vehicleData.service === "pompieri") {
+    service = "Soccorso Tecnico Urgente"
+  } else if (vehicleData.service === "protezione_civile") {
+    service = "Protezione Civile"
+  } else if (vehicleData.service === ["polizia_di_stato", "carabinieri", "guardia_di_finanza", "polizia_locale"]) {
+    service = "Ordine Pubblico"
+  } else if (vehicleData.service === "soccorso_alpino") {
+    service = "Soccorso Alpino"
+  } else if (vehicleData.service === "guardia_costiera") {
+    service = "Guardia Costiera"
+  } else if (vehicleData.service === "")
 
   return `<!doctype html>
 <html lang="it">
@@ -221,11 +247,10 @@ function generateVehicleHtml(vehicleData, fileName) {
         <ul>
           <li><strong>Marca:<\/strong> ${escapeHtml(vehicleData.brand)}<\/li>
           <li><strong>Modello:<\/strong> ${escapeHtml(vehicleData.model)}<\/li>
-          ${vehicleData.builder ? `<li><strong>Allestimento:<\/strong> ${escapeHtml(vehicleData.builder)}<\/li>` : ""}
-          <li><strong>Targa:<\/strong> ${escapeHtml(vehicleData.plate)}<\/li>
-          <li><strong>Servizio:<\/strong> ${escapeHtml(vehicleData.service)}<\/li>
+          <li><strong>Allestimento:<\/strong> ${escapeHtml(vehicleData.builder ? vehicleData.builder : "N/A")}<\/li>
+          <li><strong>Targa:<\/strong> ${escapeHtml(vehicleData.plate ? vehicleData.plate : "N/A")}<\/li>
+          <li><strong>Servizio:<\/strong> ${escapeHtml(service)}<\/li>
           <li><strong>Sede:<\/strong> ${escapeHtml(vehicleData.headquarters)}<\/li>
-          ${vehicleData.notes ? `<li><strong>Note:<\/strong> ${escapeHtml(vehicleData.notes)}<\/li>` : ""}
         <\/ul>
       <\/section>
 
