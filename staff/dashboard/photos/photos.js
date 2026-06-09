@@ -210,7 +210,6 @@ function openDraftModal(photoData, photoId) {
     photoFileName.textContent = photoData.vehicleModel || 'Foto veicolo';
   }
  
-  // Mostra il modal
   const modal = document.getElementById('draftModal');
   if (modal) {
     modal.classList.add('active');

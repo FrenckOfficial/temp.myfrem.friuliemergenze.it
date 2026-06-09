@@ -5,6 +5,7 @@ import {
     getDocs,
     query,
     orderBy,
+    getDoc,
     updateDoc,
     deleteDoc,
     doc,
@@ -19,6 +20,7 @@ const auth = getAuth(app);
 const logoutBtn = document.getElementById('logoutBtn');
 const modalClose = document.querySelector('.modal-close');
 const btnCancel = document.querySelector('.btn-cancel');
+const statusMsg = document.getElementById('statusMsg');
 
 modalClose.addEventListener('click', () => {
     closeDraftModal();
@@ -532,6 +534,12 @@ class VehicleDraftsManager {
         if (window.showNotification) {
             window.showNotification(message, 'loading');
         }
+    }
+
+    setStatus(message, type) {
+        if (!statusMsg) return;
+        statusMsg.textContent = message;
+        statusMsg.className = type;
     }
 }
 
