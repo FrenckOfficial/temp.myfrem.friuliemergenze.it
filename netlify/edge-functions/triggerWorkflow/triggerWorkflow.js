@@ -16,6 +16,11 @@ export default async (request, context) => {
 
   let draftId;
 
+  const token = Netlify.env.get("GITHUB_PAT");
+
+  console.log("TOKEN ESISTE:", !!token);
+  console.log("TOKEN LENGTH:", token?.length);
+
   try {
     ({ draftId } = JSON.parse(rawBody));
   } catch (err) {
@@ -33,7 +38,7 @@ export default async (request, context) => {
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${Netlify.env.get("GITHUB_PAT")}`,
+        Authorization: `Bearer ${token}`,
         Accept: "application/vnd.github+json",
         "Content-Type": "application/json"
       },
