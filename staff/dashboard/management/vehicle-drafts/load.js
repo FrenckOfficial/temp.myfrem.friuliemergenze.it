@@ -244,6 +244,7 @@ class VehicleDraftsManager {
             vehicleModel: 'model',
             vehiclePlate: 'plate',
             vehicleBuilder: 'builder',
+            vehicleSlug: 'slug',
             vehicleService: 'service',
             vehicleHQ: 'headquarters',
             vehicleNotes: 'notes'
@@ -337,6 +338,7 @@ class VehicleDraftsManager {
             await updateDoc(draftRef, {
                 status: 'published',
                 data: vehicleData,
+                slug: vehicleData.slug,
                 updatedAt: Timestamp.now(),
                 updatedBy: currentUser || 'Staff User'
             });
@@ -347,6 +349,7 @@ class VehicleDraftsManager {
 
             draft.data = vehicleData;
             draft.status = 'published';
+            draft.slug = 
             draft.updatedAt = new Date().toISOString();
 
             console.log('✅ Stato locale aggiornato');
@@ -401,7 +404,7 @@ class VehicleDraftsManager {
 
     validateForm() {
         console.log('✔️ validateForm');
-        const requiredFields = ['vehicleTitle', 'vehicleBrand', 'vehicleModel', 'vehiclePlate', 'vehicleService', 'vehicleHQ'];
+        const requiredFields = ['vehicleTitle', 'vehicleBrand', 'vehicleModel', 'vehiclePlate', 'vehicleService', 'vehicleSlug', 'vehicleHQ'];
         
         for (const fieldId of requiredFields) {
             const element = document.getElementById(fieldId);
@@ -421,6 +424,7 @@ class VehicleDraftsManager {
             plate: document.getElementById('vehiclePlate')?.value.toUpperCase() || '',
             builder: document.getElementById('vehicleBuilder')?.value || '',
             service: document.getElementById('vehicleService')?.value || '',
+            slug: document.getElementById('vehicleSlug')?.value || '',
             headquarters: document.getElementById('vehicleHQ')?.value || '',
             notes: document.getElementById('vehicleNotes')?.value || ''
         };
@@ -507,7 +511,6 @@ class VehicleDraftsManager {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("VERSIONE 12 GIUGNO 2025");
     console.log('🎯 DOMContentLoaded - Inizializzazione manager');
     window.vehicleDraftsManager = new VehicleDraftsManager();
 

@@ -72,6 +72,7 @@ async function pushVehicleToGithub() {
 
   const fileName = draft.fileName.replace(/\.[^.]+$/, "");
   const vehicleData = draft.data || {};
+  const slug = draft.slug || fileName;
 
   await updateGalleryJson(
     fileName,
@@ -83,7 +84,9 @@ async function pushVehicleToGithub() {
 
   await createVehicleDetailsPage(
     fileName,
-    vehicleData
+    vehicleData,
+    slug,
+    draft.photoUrl
   );
 
   console.log("✅ Pagina HTML creata");
@@ -110,7 +113,7 @@ async function updateGalleryJson(
     await octokit.repos.getContent({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
-      path: "gallery.json",
+      path: "/gallery.json",
     });
 
   const content = JSON.parse(
@@ -129,20 +132,14 @@ async function updateGalleryJson(
     : "";
 
   const vehicle = {
-    id: fileName,
     title: vehicleData.title || "",
-    brand: vehicleData.brand || "",
-    model: vehicleData.model || "",
-    plate: vehicleData.plate || "",
-    image: `gallery/images/${imageName}`,
-    detailsUrl: `gallery/scheda/${fileName}/`,
-    published: new Date().toISOString(),
+    image: photoUrl || "",
+    category: vehicleData.service || "",
+    spotter: "",
+    link: `/gallery/scheda/${fileName}/`,
   };
 
-  const existingIndex =
-    content.vehicles.findIndex(
-      (v) => v.id === fileName
-    );
+  const existingIndex = content.vehicles.findIndex((v) => v.link === `/gallery/scheda/${fileName}/`);
 
   if (existingIndex >= 0) {
     content.vehicles[existingIndex] = vehicle;
@@ -151,11 +148,12 @@ async function updateGalleryJson(
   }
 
   console.log("💾 Salvataggio gallery.json");
+  console.log(JSON.stringify(content, null, 2));
 
   await octokit.repos.createOrUpdateFileContents({
     owner: GITHUB_OWNER,
     repo: GITHUB_REPO,
-    path: "gallery.json",
+    path: "/gallery.json",
     message: `🚗 Add vehicle ${vehicleData.title}`,
     content: Buffer
       .from(JSON.stringify(content, null, 2))
@@ -167,12 +165,15 @@ async function updateGalleryJson(
 
 async function createVehicleDetailsPage(
   fileName,
-  vehicleData
+  vehicleData,
+  slug,
+  photoUrl
 ) {
   const html =
     generateVehicleHtml(
       vehicleData,
-      fileName
+      fileName,
+      slug
     );
 
   try {
@@ -180,13 +181,13 @@ async function createVehicleDetailsPage(
       await octokit.repos.getContent({
         owner: GITHUB_OWNER,
         repo: GITHUB_REPO,
-        path: `gallery/scheda/${fileName}/index.html`,
+        path: `/gallery/scheda/${fileName}/index.html`,
       });
 
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
-      path: `gallery/scheda/${fileName}/index.html`,
+      path: `/gallery/scheda/${fileName}/index.html`,
       message: `📄 Update vehicle ${vehicleData.title}`,
       content: Buffer
         .from(html)
@@ -199,7 +200,7 @@ async function createVehicleDetailsPage(
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
-      path: `gallery/scheda/${fileName}/index.html`,
+      path: `/gallery/scheda/${fileName}/index.html`,
       message: `📄 Add vehicle ${vehicleData.title}`,
       content: Buffer
         .from(html)
@@ -237,9 +238,9 @@ function getServiceLabel(service) {
   }
 }
 
-function generateVehicleHtml(vehicleData, fileName) {
+function generateVehicleHtml(vehicleData, fileName, slug, photoUrl) {
   const imageFileName = vehicleData.imageFileName || `${fileName}.jpg`;
-  const pageUrl = `https://friuliemergenze.it/gallery/scheda/${fileName}`;
+  const pageUrl = `https://friuliemergenze.it/gallery/scheda/${slug}`;
   const service = getServiceLabel(vehicleData.service);
 
   return `<!doctype html>
@@ -287,7 +288,7 @@ function generateVehicleHtml(vehicleData, fileName) {
     <main class="scheda-mezzo">
       <h1>${escapeHtml(vehicleData.title)}<\/h1>
       <img
-        src="/assets/mezzi/${escapeHtml(imageFileName)}"
+        src="${photoUrl}"
         alt="${escapeHtml(vehicleData.title)}"
       />
 
