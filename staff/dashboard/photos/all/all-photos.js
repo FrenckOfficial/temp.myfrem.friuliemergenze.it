@@ -33,9 +33,9 @@ logoutBtn.addEventListener("click", async () => {
 });
 
 function setStatus(message, type = "info") {
-  if (!statusMsg) return;
   statusMsg.textContent = message;
-  statusMsg.className = type;
+  statusMsg.className = `${"statusBox" + " " + type}`;
+  statusMsg.style.display = "block";
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -47,11 +47,13 @@ onAuthStateChanged(auth, async (user) => {
   try {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
+    const userData = userSnap.data();
 
     const allowedRoles = ["simplestaff", "modstaff", "advstaff", "advstaffplus", "superadmin"];
 
-    if (!userSnap.exists() || !allowedRoles.includes(userSnap.data().role)) {
-      window.location.href = "/dashboard";
+    if (!allowedRoles.includes(userData.role)) {
+      setStatus("Accesso negato: solo staff autorizzato.", "error");
+      window.location.href = "/login/";
       return;
     }
 
@@ -76,7 +78,7 @@ async function loadUsersMap() {
 
 async function loadAllPhotos() {
   try {
-    setStatus("⏳ Caricamento tutte le foto...");
+    console.log("⏳ Caricamento tutte le foto...");
 
     const q = query(
       collection(db, "photos"),
@@ -101,6 +103,7 @@ async function loadAllPhotos() {
 
       let linkBox = "Non disponibile in quanto foto in attesa o rifiutata";
       let serviceType = "Non inserito";
+      let status;
 
       if (photo.status?.includes("Approvata")) {
         const hasLink = photo.vehicleLink && photo.vehicleLink.trim().length > 0;
@@ -153,9 +156,15 @@ async function loadAllPhotos() {
         serviceType = "Protezione Civile";
       } else serviceType;
 
+      if (photo.status?.includes("Approvata")) {
+        status = "Approvata";
+      } else if (photo.status?.includes("Rifiutata")) {
+        status = "Rifiutata";
+      }
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td><span class="status-indicator" style="background-color: ${statusColor};"></span> <b>${photo.status || "Sconosciuto"}</b></td>
+        <td><span class="status-indicator" style="color: ${statusColor};"></span> <b style="color:${statusColor};">${status || "Sconosciuto"}</b></td>  
         <td><img src="${photo.url}" class="preview" alt="Preview della foto caricata tramite i sistemi Friuli Emergenze" /></td>
         <td><b>${photo.vehicleModel || "Non inserito"}</b></td>
         <td><b>${photo.sponsor || "Non inserito"}</b></td>
@@ -172,7 +181,7 @@ async function loadAllPhotos() {
       photosTableBody.appendChild(tr);
     });
 
-    setStatus(`📸 Totale foto: ${snapshot.size}`);
+    console.log(`📸 Totale foto: ${snapshot.size}`);
   } catch (err) {
     console.error("Errore caricamento:", err);
     setStatus("Errore caricamento foto", "error");
@@ -205,12 +214,12 @@ window.saveVehicleLink = async (photoId) => {
   const link = input?.value?.trim();
 
   if (!link) {
-    alert("❌ Inserisci un link valido");
+    setStatus("Inserisci un link valido", "error");
     return;
   }
 
   if (!isValidUrl(link)) {
-    alert("❌ Formato URL non valido. Usa: https://friuliemergenze.it");
+    setStatus("Formato URL non valido. Usa: https://friuliemergenze.it", "error");
     return;
   }
 
@@ -251,7 +260,6 @@ window.saveVehicleLink = async (photoId) => {
   } catch (err) {
     console.error("Errore salvataggio link:", err);
     setStatus("❌ Errore salvataggio link", "error");
-    alert("❌ Errore durante il salvataggio");
   } finally {
     const saveBtn = document.querySelector(`#box-${photoId} .save-btn`);
     if (saveBtn) saveBtn.disabled = false;

@@ -1,0 +1,4 @@
+Contact: mailto:sicurezza@friuliemergenze.it
+Expires: 2040-12-31T23:59
+Preferred-Languages: it
+Canonical: https://myfrem.friuliemergenze.it/security.txt

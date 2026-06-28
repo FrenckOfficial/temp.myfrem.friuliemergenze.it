@@ -10,6 +10,7 @@ const db = getFirestore(app);
 const usersTableBody = document.querySelector("#usersTable tbody");
 const logoutBtn = document.getElementById("logoutBtn");
 const totalUsersCountEl = document.getElementById("totalUsersCount");
+const statusMsg = document.getElementById("statusMsg");
 
 logoutBtn.addEventListener("click", async () => {
   console.log("🚪 Logout in corso...");
@@ -28,13 +29,13 @@ onAuthStateChanged(auth, async user => {
   const userDocSnap = await getDoc(userDocRef);
   const userData = userDocSnap.data();
 
-  const allowedRoles = ["simplestaff", "modstaff", "advstaff", "advstaffplus", "superadmin"];
+  const allowedRoles = ["advstaffplus", "superadmin"];
 
-  if (!userData || !allowedRoles.includes(userData.role)) {
-    alert("Accesso negato: solo staff");
-    window.location.href = "/login/";
-    return;
-  }
+  if (!allowedRoles.includes(userData.role)) {
+      setStatus("Accesso negato: solo staff autorizzato.", "error");
+      window.location.href = "/login/";
+      return;
+    }
 
   loadUsers();
 });
@@ -165,4 +166,10 @@ async function deleteFromDatabase(userId) {
     await deleteDoc(doc(db, "users_whatsapp", userId));
     loadUsers();
   }
+}
+
+function setStatus(message, type = "info") {
+  statusMsg.textContent = message;
+  statusMsg.className = `${"statusBox" + " " + type}`;
+  statusMsg.style.display = "block";
 }

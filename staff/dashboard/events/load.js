@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, updateDoc, addDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { firebaseConfig } from "../../../configFirebase.js";
+import { firebaseConfig } from "https://myfrem.friuliemergenze.it/configFirebase.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -16,6 +16,14 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "/login";
     return;
+
+    const allowedRoles = ["advstaffplus", "superadmin"];
+
+    if (!allowedRoles.includes(userData.role)) {
+      setStatus("Accesso negato: solo staff autorizzato.", "error");
+      window.location.href = "/login/";
+      return;
+    }
   }
 
   try {
@@ -77,7 +85,7 @@ onAuthStateChanged(auth, async (user) => {
       
         div.querySelector(".btn-organized").onclick = async () => {
           const userRef = doc(db, "events", docSnap.id);
-          window.location.href = `/staff/dashboard/events/completeorganization/?event_id=${docSnap.id}`
+          window.location.href = `/events/completeorganization/?event_id=${docSnap.id}`
           await addDoc(collection(db, "activities"), {
             organizationStaffer: auth.currentUser.email || "-",
             eventTitle: e.title,
@@ -115,7 +123,7 @@ onAuthStateChanged(auth, async (user) => {
         div.querySelector(".btn-view1").onclick = async () => {
           const userRef = doc(db, "events", docSnap.id);
           await updateDoc(userRef, { showInDash: false });
-          alert("Evento nascosto dalla dashboard user.");
+          setStatus("Evento nascosto dalla dashboard user.", "success");
         }
 
         eventsList.appendChild(div);
@@ -125,3 +133,8 @@ onAuthStateChanged(auth, async (user) => {
     statusMsg.textContent = "❌ Errore nel caricamento degli eventi.";
   }
 });
+
+function setStatus(message, type = "info") {
+  statusMsg.textContent = message;
+  statusMsg.className = `${"statusBox" + " " + type}`;
+}

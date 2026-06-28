@@ -129,6 +129,8 @@ async function updateGalleryJson(
     throw new Error("gallery.json non è un array");
   }
 
+  const service = getServiceLabel(vehicleData.service);
+
   const imageName = photoUrl
     ? photoUrl.split("/").pop()
     : "";
@@ -136,7 +138,7 @@ async function updateGalleryJson(
   const vehicle = {
     title: vehicleData.title || "",
     image: photoUrl || "",
-    category: vehicleData.service || "",
+    category: service || "",
     spotter: "",
     link: `/gallery/scheda/${slug}/`,
   };
@@ -231,10 +233,16 @@ function getServiceLabel(service) {
       return "Guardia Costiera";
 
     case "polizia_di_stato":
+      return "Polizia di Stato";
+
     case "carabinieri":
+      return "Carabinieri";
+
     case "guardia_di_finanza":
+      return "Guardia di Finanza";
+      
     case "polizia_locale":
-      return "Ordine Pubblico";
+      return "Polizia Locale";
 
     default:
       return service || "N/A";

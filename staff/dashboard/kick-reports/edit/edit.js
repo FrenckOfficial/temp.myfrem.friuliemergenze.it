@@ -25,6 +25,14 @@ const db = getFirestore(app);
 
 onAuthStateChanged(auth, (user) => {
     if (!user) window.location.href = "/login";
+
+    const allowedRoles = ["advstaff", "advstaffplus", "superadmin"];
+
+    if (!allowedRoles.includes(userData.role)) {
+      setStatus("Accesso negato: solo staff autorizzato.", "error");
+      window.location.href = "/login/";
+      return;
+    }
 });
 
 document.getElementById("logoutBtn").addEventListener("click", async () => {

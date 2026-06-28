@@ -1,4 +1,4 @@
-import { getNameById } from "https://myfrem.friuliemergenze.it/staff/dashboard/helpers/idResolver.js";
+import { getNameById } from "https://myfrem.friuliemergenze.it/helpers/idResolver.js";
 
 export async function parseActivity(activity, date) {
 
